@@ -1,0 +1,8 @@
+export type AuditReasonCode =
+  | "CHAT_MESSAGE"
+  | "GUARDRAIL_TRIGGERED"
+  | "PII_DETECTED"
+  | "RATE_LIMIT_EXCEEDED"
+  | "LEAD_CAPTURED"
+  | "ESCALATED_TO_HUMAN"
+  | "SYSTEM_ERROR";

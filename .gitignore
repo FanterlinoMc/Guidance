@@ -3,6 +3,9 @@
 # devswarm
 .devswarm-temp/
 
+# generated data (scraped corpus, audit log, session transcripts)
+/data/
+
 # dependencies
 /node_modules
 /.pnp
