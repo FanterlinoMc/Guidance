@@ -13,6 +13,10 @@ const config: Config = {
         foreground: "var(--foreground)",
         brand: "#0B2545",
       },
+      screens: {
+        // spec's mobile-takeover cutoff — Tailwind's default `sm:` is 640px
+        widget: "480px",
+      },
     },
   },
   plugins: [],
