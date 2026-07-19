@@ -1,0 +1,79 @@
+{
+  "_comment": "Scrape targets grouped by entity (home-services | residential | investments), used by the System Prompt for cross-entity routing. Each site's page list is the core marketing/product/compliance content from its sitemap (verified server-rendered, fetch-only, no Playwright needed for any of the three). Deliberately excluded per site, as a scope decision rather than a technical limit — revisit if the client wants them included: home-services (login/agent-create/password-reset — account flows, no content); residential (sitemap-locations.xml: 39 per-city sales-office pages; sitemap-press-releases.xml: 37 time-sensitive news items; sitemap-account-executives.xml: 78 individual staff profiles; /resources WordPress blog — long-tail, lower priority than the 41 core pages); investments (qualification-form/thank-you/schedule-a-call/request-a-call-back — lead-capture funnel pages, no content).",
+  "sites": [
+    {
+      "entity": "home-services",
+      "baseUrl": "https://www.guidancehomeservices.com",
+      "status": "ready",
+      "pages": [
+        { "path": "/" },
+        { "path": "/agents" },
+        { "path": "/homebuyers" },
+        { "path": "/about" },
+        { "path": "/contact-us" },
+        { "path": "/privacy-and-security" },
+        { "path": "/terms-of-use" }
+      ]
+    },
+    {
+      "entity": "residential",
+      "baseUrl": "https://www.guidanceresidential.com",
+      "status": "ready",
+      "pages": [
+        { "path": "/" },
+        { "path": "/california-consumer-privacy-act-notice" },
+        { "path": "/careers" },
+        { "path": "/community-involvement" },
+        { "path": "/community-leader-reviews" },
+        { "path": "/connect-with-account-executive" },
+        { "path": "/contact-us" },
+        { "path": "/customer-reviews" },
+        { "path": "/download-gios-app" },
+        { "path": "/events-photo-gallery" },
+        { "path": "/find-right-real-estate-agent" },
+        { "path": "/glossary-of-terms" },
+        { "path": "/guidance-in-the-news" },
+        { "path": "/halal-home-refinancing-checklist" },
+        { "path": "/home-buying-questions" },
+        { "path": "/home-buying-reasons" },
+        { "path": "/home-finance-calculators" },
+        { "path": "/home-refinancing-rates" },
+        { "path": "/islamic-finance-scholars-ruling-fatwa" },
+        { "path": "/islamic-home-finance-awards-recognition" },
+        { "path": "/islamic-home-finance-options" },
+        { "path": "/islamic-home-financing-checklist" },
+        { "path": "/islamic-home-financing-co-ownership-program" },
+        { "path": "/islamic-home-financing-rates" },
+        { "path": "/islamic-home-refinance-options" },
+        { "path": "/islamic-mortgage" },
+        { "path": "/leadership-and-management" },
+        { "path": "/licensed-us-locations" },
+        { "path": "/licensing-and-registrations" },
+        { "path": "/message-from-ceo" },
+        { "path": "/our-history" },
+        { "path": "/privacy-and-security" },
+        { "path": "/realty-program" },
+        { "path": "/realty-program-for-agents" },
+        { "path": "/refinancing-process" },
+        { "path": "/refinancing-questions" },
+        { "path": "/refinancing-reasons" },
+        { "path": "/shariah-board" },
+        { "path": "/shariah-compliant-home-financing" },
+        { "path": "/sms-terms-and-conditions" },
+        { "path": "/why-guidance-islamic-mortgage" }
+      ]
+    },
+    {
+      "entity": "investments",
+      "baseUrl": "https://guidanceinvestments.com",
+      "status": "ready",
+      "pages": [
+        { "path": "/" },
+        { "path": "/about" },
+        { "path": "/shariah-assurance" },
+        { "path": "/contact" },
+        { "path": "/website-terms-and-conditions-privacy-policy" }
+      ]
+    }
+  ]
+}
