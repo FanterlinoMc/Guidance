@@ -5,4 +5,5 @@ export type AuditReasonCode =
   | "RATE_LIMIT_EXCEEDED"
   | "LEAD_CAPTURED"
   | "ESCALATED_TO_HUMAN"
-  | "SYSTEM_ERROR";
+  | "SYSTEM_ERROR"
+  | "RETRIEVAL_ABUSE_BLOCKED";

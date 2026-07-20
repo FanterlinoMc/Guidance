@@ -2,7 +2,8 @@ export type AppErrorCode =
   | "RATE_LIMITED"
   | "GUARDRAIL_BLOCKED"
   | "UPSTREAM_UNAVAILABLE"
-  | "INVALID_REQUEST";
+  | "INVALID_REQUEST"
+  | "RETRIEVAL_ABUSE_BLOCKED";
 
 export class AppError extends Error {
   constructor(
