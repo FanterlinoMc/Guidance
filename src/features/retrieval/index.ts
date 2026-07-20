@@ -1,4 +1,6 @@
 export { retrieveContext } from "./logic/retrieve-context";
 export type { RetrieveContextOptions } from "./logic/retrieve-context";
+export { retrieveContextForSession } from "./logic/retrieve-context-for-session";
+export type { SessionRetrieveContextOptions } from "./logic/retrieve-context-for-session";
 export type { RetrievedChunk } from "./logic/types";
 export { enforceKbQueryLimit } from "./logic/enforce-kb-query-limit";
