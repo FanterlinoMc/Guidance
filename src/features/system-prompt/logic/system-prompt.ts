@@ -1,4 +1,4 @@
-import type { RetrievedChunk } from "./types";
+import type { RetrievedChunk } from "@/features/retrieval";
 
 // NOTE: prohibition #5 below references "the secure pre-qualification form" without a URL —
 // checked the scraped corpus (data/scraped/guidance-chunks.json) for one and found only "Get
