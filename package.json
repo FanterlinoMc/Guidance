@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:guardrails": "tsx tests/evals/guardrails.eval.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.112.3",
