@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:guardrails": "tsx tests/evals/guardrails.eval.ts"
+    "test:guardrails": "tsx tests/evals/guardrails.eval.ts",
+    "test:domain": "tsx tests/evals/domain.eval.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.112.3",
