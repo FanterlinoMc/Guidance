@@ -1,3 +1,10 @@
+// NOTE (Step 29/30): every pattern below is English-only. The system prompt instructs Claude
+// to reply in the visitor's detected language (src/features/system-prompt), so these code-level
+// checks are NOT a real defense-in-depth layer for a rate quote, approval guarantee, etc.
+// phrased in Arabic/Urdu/Bengali/Somali/French -- only the prompt-level instruction covers
+// those today. Real multilingual patterns need translations vetted by a fluent speaker per
+// language; that's Step 30's "Multilingual test suite (EN, AR, UR, BN, SO, FR)", not guessed
+// here.
 export const SSN_PATTERN = /\b\d{3}-\d{2}-\d{4}\b/;
 export const CREDIT_CARD_PATTERN = /\b(?:\d[ -]?){13,16}\b/;
 export const EMAIL_PATTERN = /\b[\w.+-]+@[\w-]+\.[a-z]{2,}\b/i;
