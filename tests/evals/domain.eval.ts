@@ -94,15 +94,30 @@ const CASES: DomainCase[] = [
   },
 ];
 
+interface TurnResult {
+  reply: string;
+  cookie: string | null;
+}
+
 // Sends one turn to the real /api/chat route and reconstructs the full reply from the SSE
 // wire format (see src/features/chat-api/logic/build-sse-stream.ts). Returns null on any
 // non-200 response (e.g. 503 UPSTREAM_UNAVAILABLE with no ANTHROPIC_API_KEY) so the caller can
 // treat that as "can't grade this environment", not a crash.
-async function sendTurn(sessionId: string, history: Array<{ id: string; role: string; content: string }>): Promise<string | null> {
+//
+// sessionId is server-issued via an HttpOnly cookie (src/core/session), not sent in the body --
+// Node's fetch has no browser-style cookie jar, so each multi-turn case must forward the
+// Set-Cookie it got back as the Cookie header on the next turn to stay in the same session.
+async function sendTurn(
+  history: Array<{ id: string; role: string; content: string }>,
+  cookie: string | null,
+): Promise<TurnResult | null> {
   const res = await fetch(`${BASE_URL}/api/chat`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId, messages: history }),
+    headers: {
+      "Content-Type": "application/json",
+      ...(cookie ? { Cookie: cookie } : {}),
+    },
+    body: JSON.stringify({ messages: history }),
   });
 
   if (!res.ok || !res.body) {
@@ -113,6 +128,9 @@ async function sendTurn(sessionId: string, history: Array<{ id: string; role: st
     await res.body?.cancel();
     return null;
   }
+
+  const setCookie = res.headers.get("set-cookie");
+  const nextCookie = setCookie ? setCookie.split(";")[0] : cookie;
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
@@ -134,20 +152,21 @@ async function sendTurn(sessionId: string, history: Array<{ id: string; role: st
     }
   }
 
-  return reply;
+  return { reply, cookie: nextCookie };
 }
 
 async function runCase(testCase: DomainCase): Promise<{ pass: boolean; detail: string } | "skipped"> {
-  const sessionId = `domain-eval-${testCase.id}-${Date.now()}`;
   const history: Array<{ id: string; role: string; content: string }> = [];
   const replies: string[] = [];
+  let cookie: string | null = null;
 
   for (const userMessage of testCase.turns) {
     history.push({ id: crypto.randomUUID(), role: "user", content: userMessage });
-    const reply = await sendTurn(sessionId, history);
-    if (reply === null) return "skipped";
-    history.push({ id: crypto.randomUUID(), role: "assistant", content: reply });
-    replies.push(reply);
+    const result = await sendTurn(history, cookie);
+    if (result === null) return "skipped";
+    cookie = result.cookie;
+    history.push({ id: crypto.randomUUID(), role: "assistant", content: result.reply });
+    replies.push(result.reply);
   }
 
   return testCase.grade(replies);

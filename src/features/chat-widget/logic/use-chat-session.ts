@@ -18,13 +18,15 @@ function setContent(messages: ChatMessage[], id: string, content: string): ChatM
 
 async function streamAssistantReply(
   history: ChatMessage[],
-  sessionId: string,
   onDelta: (delta: string) => void,
 ): Promise<void> {
   const res = await fetch("/api/chat", {
     method: "POST",
+    // Sends the server-issued session cookie (src/core/session) even when the widget is
+    // embedded cross-origin -- harmless no-op for same-origin requests.
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages: history, sessionId }),
+    body: JSON.stringify({ messages: history }),
   });
 
   if (!res.ok || !res.body) {
@@ -50,13 +52,12 @@ async function streamAssistantReply(
 }
 
 export function useChatSession() {
-  const [sessionId] = useState(() => loadSession()?.sessionId ?? crypto.randomUUID());
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadSession()?.messages ?? []);
   const [isStreaming, setIsStreaming] = useState(false);
 
   useEffect(() => {
-    saveSession({ sessionId, messages });
-  }, [sessionId, messages]);
+    saveSession({ messages });
+  }, [messages]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -68,7 +69,7 @@ export function useChatSession() {
       setIsStreaming(true);
 
       try {
-        await streamAssistantReply(history, sessionId, (delta) =>
+        await streamAssistantReply(history, (delta) =>
           setMessages((prev) => appendDelta(prev, assistantId, delta)),
         );
       } catch {
@@ -77,8 +78,8 @@ export function useChatSession() {
         setIsStreaming(false);
       }
     },
-    [messages, sessionId],
+    [messages],
   );
 
-  return { sessionId, messages, isStreaming, sendMessage };
+  return { messages, isStreaming, sendMessage };
 }

@@ -3,7 +3,6 @@ import type { ChatMessage } from "./types";
 const STORAGE_KEY = "guidance-chat-session";
 
 interface StoredSession {
-  sessionId: string;
   messages: ChatMessage[];
 }
 

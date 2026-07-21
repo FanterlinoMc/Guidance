@@ -15,6 +15,9 @@ export function buildCorsHeaders(origin: string | null): Record<string, string> 
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": ALLOWED_METHODS,
     "Access-Control-Allow-Headers": ALLOWED_HEADERS,
+    // Required for the browser to send/accept the session cookie (src/core/session) on
+    // cross-origin requests -- safe alongside a reflected (never wildcard) origin above.
+    "Access-Control-Allow-Credentials": "true",
     Vary: "Origin",
   };
 }

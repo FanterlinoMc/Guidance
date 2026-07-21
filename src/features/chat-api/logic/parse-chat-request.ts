@@ -2,22 +2,20 @@ import { AppError } from "@/core/errors/app-error";
 import type { ChatTurn } from "./types";
 
 export interface ChatRequest {
-  sessionId: string;
   messages: ChatTurn[];
 }
 
-// Validates the client's { sessionId, messages } body against src/features/chat-widget's
-// ChatMessage[] shape (id/role/content) -- id is dropped since ChatTurn only needs role/content
-// for the model call.
+// Validates the client's { messages } body against src/features/chat-widget's ChatMessage[]
+// shape (id/role/content) -- id is dropped since ChatTurn only needs role/content for the model
+// call. sessionId is deliberately NOT read from the body: it's server-resolved from an HttpOnly
+// cookie (src/core/session/resolve-session-id.ts) so a client can't forge or copy another
+// visitor's session identity.
 export function parseChatRequest(body: unknown): ChatRequest {
   if (typeof body !== "object" || body === null) {
     throw new AppError("INVALID_REQUEST", "Request body must be a JSON object.", 400);
   }
 
-  const { sessionId, messages } = body as Record<string, unknown>;
-  if (typeof sessionId !== "string" || sessionId.length === 0) {
-    throw new AppError("INVALID_REQUEST", "sessionId is required.", 400);
-  }
+  const { messages } = body as Record<string, unknown>;
   if (!Array.isArray(messages) || messages.length === 0) {
     throw new AppError("INVALID_REQUEST", "messages must be a non-empty array.", 400);
   }
@@ -27,7 +25,7 @@ export function parseChatRequest(body: unknown): ChatRequest {
     throw new AppError("INVALID_REQUEST", "The last message must be from the user.", 400);
   }
 
-  return { sessionId, messages: turns };
+  return { messages: turns };
 }
 
 function toChatTurn(entry: unknown): ChatTurn {
