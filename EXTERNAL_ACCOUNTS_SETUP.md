@@ -79,40 +79,43 @@ is known, write the sender in `src/features/lead-lifecycle` gated behind
 shape should match whatever the receiving system expects, which isn't decidable from this
 codebase alone.
 
-## DATABASE_URL (Postgres/Supabase — Step 7)
+## DATABASE_URL + Supabase Auth (Steps 5, 7 — one account unblocks both)
 
-**What**: a Postgres database (Supabase or otherwise).
-**Status**: **not wired up.** `getDatabaseUrl()` exists in `server-env.ts` but nothing calls it.
+**Decision made (2026-07-21)**: auth provider is **Supabase Auth**, chosen over Auth.js/NextAuth
+and Clerk because a Postgres schema already exists on disk
+(`supabase/migrations/0001_initial_schema.sql`) and Supabase bundles Postgres + Auth + row-level
+security under one account — a single signup resolves both this blocker and Step 7's, and
+built-in TOTP MFA covers Step 5's MFA requirement directly.
+
+**What**: a Supabase project (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`).
+**Status**: **not wired up.** `getDatabaseUrl()` exists in `server-env.ts` but nothing calls it;
+no Supabase client code exists yet.
 
 **Ready now**: `supabase/migrations/0001_initial_schema.sql` — a full base schema
 (`leads`, `stage_events`, `agent_records`, `audit_log`, `session_messages`) written
 field-for-field against the TypeScript types already in the codebase
 (`src/features/lead-lifecycle`, `agent-records`, `audit-log`). Apply it via the Supabase SQL
-editor / CLI, or plain `psql -f` against any Postgres instance — it makes no Supabase-specific
-assumptions beyond the file's location.
+editor / CLI once a project exists.
 
 **Turns on automatically**: nothing — applying the schema doesn't change app behavior by
 itself.
 
-**Still needs building after**: every feature currently backed by an in-memory `Map` or JSONL
-file (`lead-lifecycle/logic/lead-store.ts`, `agent-records/logic/agent-record-store.ts`,
-`audit-log/logic/log-event.ts`, plus `stage-event-writer.ts`) needs its store implementation
-swapped for real queries against the schema above. Each was deliberately written with a narrow,
-swappable function signature for exactly this (e.g. `createLead`, `advanceLeadStage`,
-`logEvent`) — callers shouldn't need to change, only the store internals. No ORM is set up; pick
-one (or stay on raw SQL via `pg`) as part of that work, not before — CLAUDE.md's "don't
-abstract early" applies to this too.
-- Step 18 (session transcript persistence) now has a writer
-  (`src/features/session-transcript`), but it's the same JSONL stand-in pattern as the others —
-  swap it for the `session_messages` table alongside the rest of this work.
-
-## Auth provider (Steps 5, 37 — internal dashboard)
-
-**Status**: deliberately not decided or scaffolded. No dashboard views exist yet (Steps 38-43
-are all blocked on Step 37, which is blocked on Steps 5 and 7), so there's nothing concrete to
-define real roles/permissions against — guessing an auth library now risks locking in the wrong
-one before the thing it protects exists. Decide this together with the user before building
-against it; it's a much more expensive-to-reverse choice than the items above.
+**Still needs building after a real Supabase project exists**:
+- **DB side**: every feature currently backed by an in-memory `Map` or JSONL file
+  (`lead-lifecycle/logic/lead-store.ts`, `agent-records/logic/agent-record-store.ts`,
+  `audit-log/logic/log-event.ts`, `stage-event-writer.ts`, and now
+  `session-transcript/data/transcript-writer.ts`) needs its store implementation swapped for
+  real queries against the schema above. Each was deliberately written with a narrow, swappable
+  function signature for exactly this (e.g. `createLead`, `advanceLeadStage`, `logEvent`,
+  `logSessionMessage`) — callers shouldn't need to change, only the store internals.
+- **Auth side**: real session verification/middleware (`@supabase/supabase-js` or
+  `@supabase/ssr`), wired the same way `call-claude.ts` gates on `getAnthropicApiKey()` — no
+  code exists yet because building it untested against a project that doesn't exist would be
+  the same anti-pattern as Steps 11/12. The permission matrix (which of
+  `concierge`/`ae`/`rm`/`dm`/`admin` can do what) is a separate, still-open decision — it needs
+  Step 37's dashboard views to define real actions against, and role-to-permission boundaries
+  for a GLBA-flagged product are a business call, not just an engineering one. Decide that with
+  the user once Step 37 exists, not before.
 
 ## Vercel (or other hosting)
 
