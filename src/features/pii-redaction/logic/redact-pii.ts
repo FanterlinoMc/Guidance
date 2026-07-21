@@ -1,17 +1,17 @@
 import {
-  ACCOUNT_NUMBER_PATTERN,
+  DOCUMENT_ACCOUNT_NUMBER_PATTERN,
   DOCUMENT_CREDIT_CARD_PATTERN,
+  DOCUMENT_EMAIL_PATTERN,
+  DOCUMENT_PHONE_PATTERN,
   DOCUMENT_SSN_PATTERN,
-  EMAIL_PATTERN,
-  PHONE_PATTERN,
 } from "./document-pii-patterns";
 
 const REDACTIONS: Array<{ pattern: RegExp; replacement: string }> = [
-  { pattern: EMAIL_PATTERN, replacement: "[REDACTED-EMAIL]" },
+  { pattern: DOCUMENT_EMAIL_PATTERN, replacement: "[REDACTED-EMAIL]" },
   { pattern: DOCUMENT_SSN_PATTERN, replacement: "[REDACTED-SSN]" },
   { pattern: DOCUMENT_CREDIT_CARD_PATTERN, replacement: "[REDACTED-CARD]" },
-  { pattern: ACCOUNT_NUMBER_PATTERN, replacement: "[REDACTED-ACCOUNT]" },
-  { pattern: PHONE_PATTERN, replacement: "[REDACTED-PHONE]" },
+  { pattern: DOCUMENT_ACCOUNT_NUMBER_PATTERN, replacement: "[REDACTED-ACCOUNT]" },
+  { pattern: DOCUMENT_PHONE_PATTERN, replacement: "[REDACTED-PHONE]" },
 ];
 
 // Masks PII in ingested-document text before it can reach the vector index (Step 9.3) — the

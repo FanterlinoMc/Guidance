@@ -1,5 +1,8 @@
 export const SSN_PATTERN = /\b\d{3}-\d{2}-\d{4}\b/;
 export const CREDIT_CARD_PATTERN = /\b(?:\d[ -]?){13,16}\b/;
+export const EMAIL_PATTERN = /\b[\w.+-]+@[\w-]+\.[a-z]{2,}\b/i;
+export const PHONE_PATTERN = /\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/;
+export const ACCOUNT_NUMBER_PATTERN = /\baccount\s*#?\s*\d{6,}\b/i;
 
 // Heuristic pre-filter, not a substitute for the model's own instruction-following —
 // catches the common/obvious injection attempts and logs them for audit review.
