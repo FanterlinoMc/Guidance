@@ -40,3 +40,15 @@ export function getLeadWebhookUrl(): string | undefined {
 export function getDatabaseUrl(): string | undefined {
   return getOptionalEnv("DATABASE_URL");
 }
+
+// Comma-separated list of origins allowed to call /api/chat cross-origin (e.g. the marketing
+// site embedding the widget). Unset means no cross-origin caller is trusted -- same-origin
+// requests are unaffected, since browsers only enforce CORS on cross-origin ones.
+export function getAllowedOrigins(): string[] {
+  const raw = getOptionalEnv("ALLOWED_ORIGINS");
+  if (!raw) return [];
+  return raw
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}

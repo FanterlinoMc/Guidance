@@ -7,20 +7,28 @@ import {
   handleChatError,
   parseChatRequest,
 } from "@/features/chat-api";
+import { getAllowedOrigins } from "@/core/env/server-env";
+import { buildCorsHeaders, resolveCorsOrigin } from "@/core/security/cors";
 import { runInputGuardrail, runOutputGuardrail } from "@/features/guardrails";
 import { retrieveContextForSession } from "@/features/retrieval";
 import { buildSystemMessage } from "@/features/system-prompt";
 
 const DEFAULT_REFUSAL = "I can only help with questions about Guidance Home Services financing.";
 
+export async function OPTIONS(request: NextRequest) {
+  return new Response(null, { status: 204, headers: corsHeadersFor(request) });
+}
+
 export async function POST(request: NextRequest) {
+  const corsHeaders = corsHeadersFor(request);
+
   try {
     const { sessionId, messages } = parseChatRequest(await request.json());
     const latestUserMessage = messages[messages.length - 1].content;
 
     const inputResult = await runInputGuardrail(latestUserMessage, sessionId);
     if (!inputResult.allowed) {
-      return sseResponse(inputResult.refusalMessage ?? DEFAULT_REFUSAL);
+      return sseResponse(inputResult.refusalMessage ?? DEFAULT_REFUSAL, corsHeaders);
     }
 
     const retrievedChunks = await retrieveContextForSession(sessionId, latestUserMessage);
@@ -32,18 +40,27 @@ export async function POST(request: NextRequest) {
     const outputResult = await runOutputGuardrail(replyText, sessionId, retrievedChunks);
     const finalText = outputResult.allowed ? replyText : (outputResult.refusalMessage ?? DEFAULT_REFUSAL);
 
-    return sseResponse(finalText);
+    return sseResponse(finalText, corsHeaders);
   } catch (error) {
-    return handleChatError(error);
+    const errorResponse = handleChatError(error);
+    for (const [name, value] of Object.entries(corsHeaders)) {
+      errorResponse.headers.set(name, value);
+    }
+    return errorResponse;
   }
 }
 
-function sseResponse(text: string): Response {
+function corsHeadersFor(request: NextRequest): Record<string, string> {
+  return buildCorsHeaders(resolveCorsOrigin(request.headers.get("origin"), getAllowedOrigins()));
+}
+
+function sseResponse(text: string, corsHeaders: Record<string, string>): Response {
   return new Response(buildSSEStream(chunkTextForStreaming(text)), {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
       Connection: "keep-alive",
+      ...corsHeaders,
     },
   });
 }
