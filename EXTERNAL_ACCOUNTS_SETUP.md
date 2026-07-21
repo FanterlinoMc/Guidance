@@ -102,8 +102,9 @@ swappable function signature for exactly this (e.g. `createLead`, `advanceLeadSt
 `logEvent`) — callers shouldn't need to change, only the store internals. No ORM is set up; pick
 one (or stay on raw SQL via `pg`) as part of that work, not before — CLAUDE.md's "don't
 abstract early" applies to this too.
-- Step 18 (session transcript persistence) is blocked on this same schema
-  (`session_messages` table) and has no writer yet at all — build it alongside the above.
+- Step 18 (session transcript persistence) now has a writer
+  (`src/features/session-transcript`), but it's the same JSONL stand-in pattern as the others —
+  swap it for the `session_messages` table alongside the rest of this work.
 
 ## Auth provider (Steps 5, 37 — internal dashboard)
 
