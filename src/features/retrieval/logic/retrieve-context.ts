@@ -1,5 +1,4 @@
-import { classifySource } from "@/features/source-classification";
-import type { SourceType, SourceVisibility } from "@/features/source-classification";
+import type { SourceVisibility } from "@/features/source-classification";
 import type { CorpusChunk } from "@/features/scraping";
 import { getIdfIndex } from "./build-idf-index";
 import { filterByVisibility } from "./filter-by-visibility";
@@ -26,11 +25,7 @@ export function retrieveContext(query: string, options: RetrieveContextOptions =
 
   const corpus = loadCorpus();
   const entityFiltered = entity ? corpus.filter((chunk) => chunk.entity === entity) : corpus;
-  const candidates = filterByVisibility(
-    entityFiltered,
-    () => classifySource(toSourceType()).visibility,
-    allowedVisibility,
-  );
+  const candidates = filterByVisibility(entityFiltered, (chunk) => chunk.visibility, allowedVisibility);
   const idf = getIdfIndex();
 
   return candidates
@@ -41,18 +36,12 @@ export function retrieveContext(query: string, options: RetrieveContextOptions =
     .map(({ chunk }) => toRetrievedChunk(chunk));
 }
 
-// Every chunk in the corpus today comes from src/features/scraping (Step 9), which only ever
-// produces public marketing pages. Step 9.1 (internal SOP/fatwa ingestion) will give chunks a
-// real per-document source type to branch on instead of this constant.
-function toSourceType(): SourceType {
-  return "public-web";
-}
-
-// The corpus is generated exclusively from src/features/scraping/data/seed-sites.json, whose
-// three entities match RetrievedChunk's narrower union — the cast is safe as long as that
-// stays true.
+// The corpus is generated from src/features/scraping/data/seed-sites.json (Step 9) and
+// data/internal-docs/documents.ts (Step 9.1), whose entities match RetrievedChunk's narrower
+// union — the cast is safe as long as that stays true. visibility/audience come straight from
+// the chunk: each was resolved once at ingestion time (see CorpusChunk's comment), not
+// re-derived here.
 function toRetrievedChunk(chunk: CorpusChunk): RetrievedChunk {
-  const { visibility, audience } = classifySource(toSourceType());
   return {
     id: chunk.id,
     text: chunk.text,
@@ -60,7 +49,7 @@ function toRetrievedChunk(chunk: CorpusChunk): RetrievedChunk {
     entity: chunk.entity as RetrievedChunk["entity"],
     title: chunk.title,
     section: chunk.section,
-    visibility,
-    audience,
+    visibility: chunk.visibility,
+    audience: chunk.audience,
   };
 }

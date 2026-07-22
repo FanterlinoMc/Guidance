@@ -5,6 +5,7 @@
 import { encode } from "gpt-tokenizer";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { classifySource } from "../src/features/source-classification";
 import { buildChunkId, chunkSection, splitSentences } from "../src/features/scraping";
 import type { CorpusChunk, ScrapedPage } from "../src/features/scraping";
 
@@ -15,6 +16,7 @@ function main() {
   const pages: ScrapedPage[] = JSON.parse(readFileSync(corpusPath, "utf-8"));
 
   const chunks: CorpusChunk[] = [];
+  const { visibility, audience } = classifySource("public-web");
 
   for (const page of pages) {
     const pageSlug = new URL(page.url).pathname || "home";
@@ -33,6 +35,8 @@ function main() {
           section: section.heading,
           text,
           tokenEstimate: encode(text).length,
+          visibility,
+          audience,
         });
       });
     });
