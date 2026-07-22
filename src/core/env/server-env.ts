@@ -41,6 +41,14 @@ export function getDatabaseUrl(): string | undefined {
   return getOptionalEnv("DATABASE_URL");
 }
 
+// Optional override for the global rate-limit bucket (src/features/rate-limit/logic/limiter.ts).
+// Defaults to 2000/hour if unset -- routed through getOptionalEnv so an empty-string env var
+// (the .env.local.example placeholder's actual value) is treated as unset, not as "0".
+export function getRateLimitGlobalPerHour(): number {
+  const raw = getOptionalEnv("RATE_LIMIT_GLOBAL_PER_HOUR");
+  return raw ? Number(raw) : 2000;
+}
+
 // Comma-separated list of origins allowed to call /api/chat cross-origin (e.g. the marketing
 // site embedding the widget). Unset means no cross-origin caller is trusted -- same-origin
 // requests are unaffected, since browsers only enforce CORS on cross-origin ones.

@@ -1,6 +1,8 @@
+import { getRateLimitGlobalPerHour } from "@/core/env/server-env";
+
 const WINDOW_MS = 60 * 60 * 1000;
 const PER_IP_LIMIT = 30;
-const GLOBAL_LIMIT = Number(process.env.RATE_LIMIT_GLOBAL_PER_HOUR ?? 2000);
+const GLOBAL_LIMIT = getRateLimitGlobalPerHour();
 
 interface Bucket {
   count: number;

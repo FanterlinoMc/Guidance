@@ -11,6 +11,7 @@ import { getAllowedOrigins } from "@/core/env/server-env";
 import { resolveSessionId } from "@/core/session/resolve-session-id";
 import { buildCorsHeaders, resolveCorsOrigin } from "@/core/security/cors";
 import { runInputGuardrail, runOutputGuardrail } from "@/features/guardrails";
+import { enforceRateLimit } from "@/features/rate-limit";
 import { retrieveContextForSession } from "@/features/retrieval";
 import { logSessionMessage } from "@/features/session-transcript";
 import { buildSystemMessage } from "@/features/system-prompt";
@@ -26,6 +27,8 @@ export async function POST(request: NextRequest) {
   const { sessionId, setCookieHeader } = resolveSessionId(request);
 
   try {
+    enforceRateLimit(request);
+
     const { messages } = parseChatRequest(await request.json());
     const latestUserMessage = messages[messages.length - 1].content;
     await logSessionMessage(sessionId, "user", latestUserMessage);
