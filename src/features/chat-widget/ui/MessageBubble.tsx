@@ -1,4 +1,5 @@
 import { isRTL } from "@/features/multilingual";
+import { renderMarkdown } from "../logic/render-markdown";
 import type { ChatMessage } from "../logic/types";
 
 export function MessageBubble({ message }: { message: ChatMessage }) {
@@ -10,7 +11,7 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         isUser ? "ml-auto bg-brand text-white" : "mr-auto bg-gray-100 text-gray-900"
       }`}
     >
-      {message.content}
+      {renderMarkdown(message.content)}
     </div>
   );
 }
