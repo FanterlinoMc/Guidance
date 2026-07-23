@@ -7,7 +7,7 @@ import { ChatPanel } from "./ChatPanel";
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const { messages, isStreaming, sendMessage } = useChatSession();
+  const { messages, isStreaming, suggestions, sendMessage } = useChatSession();
 
   if (!isOpen) {
     return <ChatBubble onClick={() => setIsOpen(true)} />;
@@ -17,6 +17,7 @@ export function ChatWidget() {
     <ChatPanel
       messages={messages}
       isStreaming={isStreaming}
+      suggestions={suggestions}
       onSend={sendMessage}
       onClose={() => setIsOpen(false)}
     />

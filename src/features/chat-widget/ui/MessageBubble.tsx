@@ -7,8 +7,10 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
   return (
     <div
       dir={isRTL(message.content) ? "rtl" : "ltr"}
-      className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
-        isUser ? "ml-auto bg-brand text-white" : "mr-auto bg-gray-100 text-gray-900"
+      className={`max-w-[80%] px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
+        isUser
+          ? "ml-auto rounded-2xl rounded-br-md bg-brand text-white"
+          : "mr-auto rounded-2xl rounded-bl-md bg-white text-gray-900"
       }`}
     >
       {renderMarkdown(message.content)}

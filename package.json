@@ -11,7 +11,8 @@
     "test:domain": "tsx tests/evals/domain.eval.ts",
     "test:resilience": "tsx tests/evals/resilience.eval.ts",
     "test:markdown": "tsx tests/evals/render-markdown.eval.ts",
-    "test:rtl": "tsx tests/evals/rtl-detection.eval.ts"
+    "test:rtl": "tsx tests/evals/rtl-detection.eval.ts",
+    "test:multilingual": "tsx tests/evals/multilingual.eval.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.112.3",

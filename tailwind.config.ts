@@ -12,6 +12,11 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         brand: "#0B2545",
+        // Muted gold accent and warm paper neutral -- used sparingly (chips, dividers, the
+        // header's watermark motif) so the widget reads as considered financial-services
+        // branding rather than a stock blue-bubble chat template.
+        "brand-gold": "#C9A227",
+        "brand-paper": "#F6F3EC",
       },
       screens: {
         // spec's mobile-takeover cutoff — Tailwind's default `sm:` is 640px

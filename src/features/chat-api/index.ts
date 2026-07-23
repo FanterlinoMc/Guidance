@@ -1,5 +1,7 @@
 export { capConversationHistory, MAX_HISTORY_TOKENS } from "./logic/cap-conversation-history";
 export { callClaude } from "./logic/call-claude";
+export { extractSuggestions } from "./logic/extract-suggestions";
+export type { ExtractedReply } from "./logic/extract-suggestions";
 export { CLAUDE_MODEL } from "./logic/claude-model";
 export { parseChatRequest } from "./logic/parse-chat-request";
 export type { ChatRequest } from "./logic/parse-chat-request";

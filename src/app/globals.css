@@ -25,3 +25,30 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Chat launcher's one-time "notice me" pulse on page load (see ChatBubble.tsx) -- a bounded
+   animation-iteration-count, not an infinite loop, so a returning visitor isn't nagged by it.
+   Gated on prefers-reduced-motion here rather than via a motion-safe: Tailwind variant, since the
+   ring is a plain CSS animation, not a Tailwind utility. */
+.chat-bubble-greet::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .chat-bubble-greet::before {
+    animation: chat-bubble-ring 2.2s ease-out 1;
+  }
+}
+
+@keyframes chat-bubble-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(201 162 39 / 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgb(201 162 39 / 0);
+  }
+}

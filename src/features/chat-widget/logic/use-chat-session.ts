@@ -19,6 +19,7 @@ function setContent(messages: ChatMessage[], id: string, content: string): ChatM
 async function streamAssistantReply(
   history: ChatMessage[],
   onDelta: (delta: string) => void,
+  onSuggestions: (suggestions: string[]) => void,
 ): Promise<void> {
   const res = await fetch("/api/chat", {
     method: "POST",
@@ -45,8 +46,10 @@ async function streamAssistantReply(
     const { events, remainder } = splitSSEBuffer(buffer);
     buffer = remainder;
     for (const line of events) {
-      const delta = parseSSELine(line);
-      if (delta) onDelta(delta);
+      const event = parseSSELine(line);
+      if (!event) continue;
+      if (event.type === "text") onDelta(event.text);
+      else onSuggestions(event.suggestions);
     }
   }
 }
@@ -54,6 +57,7 @@ async function streamAssistantReply(
 export function useChatSession() {
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadSession()?.messages ?? []);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
     saveSession({ messages });
@@ -66,11 +70,14 @@ export function useChatSession() {
       const history = [...messages, userMessage];
 
       setMessages([...history, { id: assistantId, role: "assistant", content: "" }]);
+      setSuggestions([]); // clear the previous turn's suggestions while the new reply streams in
       setIsStreaming(true);
 
       try {
-        await streamAssistantReply(history, (delta) =>
-          setMessages((prev) => appendDelta(prev, assistantId, delta)),
+        await streamAssistantReply(
+          history,
+          (delta) => setMessages((prev) => appendDelta(prev, assistantId, delta)),
+          (newSuggestions) => setSuggestions(newSuggestions),
         );
       } catch {
         setMessages((prev) => setContent(prev, assistantId, FALLBACK_ERROR_TEXT));
@@ -81,5 +88,5 @@ export function useChatSession() {
     [messages],
   );
 
-  return { messages, isStreaming, sendMessage };
+  return { messages, isStreaming, suggestions, sendMessage };
 }

@@ -4,6 +4,7 @@ import {
   callClaude,
   capConversationHistory,
   chunkTextForStreaming,
+  extractSuggestions,
   handleChatError,
   parseChatRequest,
 } from "@/features/chat-api";
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const inputResult = await runInputGuardrail(latestUserMessage, sessionId);
     if (!inputResult.allowed) {
-      return sseResponse(sessionId, inputResult.refusalMessage ?? DEFAULT_REFUSAL, corsHeaders, setCookieHeader);
+      return sseResponse(sessionId, inputResult.refusalMessage ?? DEFAULT_REFUSAL, [], corsHeaders, setCookieHeader);
     }
 
     const retrievedChunks = await retrieveContextForSession(sessionId, latestUserMessage);
@@ -43,11 +44,15 @@ export async function POST(request: NextRequest) {
     const cappedHistory = capConversationHistory(messages);
 
     const replyText = await callClaude(systemMessage, cappedHistory);
+    const { text: cleanedReply, suggestions } = extractSuggestions(replyText);
 
-    const outputResult = await runOutputGuardrail(replyText, sessionId, retrievedChunks);
-    const finalText = outputResult.allowed ? replyText : (outputResult.refusalMessage ?? DEFAULT_REFUSAL);
+    const outputResult = await runOutputGuardrail(cleanedReply, sessionId, retrievedChunks);
+    const finalText = outputResult.allowed ? cleanedReply : (outputResult.refusalMessage ?? DEFAULT_REFUSAL);
+    // No follow-up chips on a guardrail-blocked reply -- the model's suggestions were written
+    // for the reply it intended to give, not the refusal that replaced it.
+    const finalSuggestions = outputResult.allowed ? suggestions : [];
 
-    return sseResponse(sessionId, finalText, corsHeaders, setCookieHeader);
+    return sseResponse(sessionId, finalText, finalSuggestions, corsHeaders, setCookieHeader);
   } catch (error) {
     const errorResponse = handleChatError(error);
     for (const [name, value] of Object.entries(corsHeaders)) {
@@ -65,12 +70,13 @@ function corsHeadersFor(request: NextRequest): Record<string, string> {
 async function sseResponse(
   sessionId: string,
   text: string,
+  suggestions: string[],
   corsHeaders: Record<string, string>,
   setCookieHeader: string | null,
 ): Promise<Response> {
   await logSessionMessage(sessionId, "assistant", text);
 
-  const response = new Response(buildSSEStream(chunkTextForStreaming(text)), {
+  const response = new Response(buildSSEStream(chunkTextForStreaming(text), suggestions), {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
