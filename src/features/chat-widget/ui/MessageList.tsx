@@ -42,11 +42,20 @@ export function MessageList({ messages, isStreaming }: MessageListProps) {
 
   return (
     <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-3">
-      {messages.map((message, index) => (
-        <div key={message.id} ref={index === messages.length - 1 ? latestMessageRef : undefined}>
-          <MessageBubble message={message} />
-        </div>
-      ))}
+      {messages.map((message, index) => {
+        const isLast = index === messages.length - 1;
+        // Skip the empty assistant placeholder bubble while its first delta hasn't arrived yet --
+        // the TypingIndicator below already represents "assistant is replying", so rendering both
+        // is just a blank white bubble taking up space above the dots for no reason.
+        if (isLast && message.role === "assistant" && message.content === "") {
+          return null;
+        }
+        return (
+          <div key={message.id} ref={isLast ? latestMessageRef : undefined}>
+            <MessageBubble message={message} />
+          </div>
+        );
+      })}
       {showTyping && <TypingIndicator />}
       <div ref={bottomRef} />
     </div>

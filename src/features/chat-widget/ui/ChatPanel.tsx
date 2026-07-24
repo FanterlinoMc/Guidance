@@ -14,6 +14,7 @@ interface ChatPanelProps {
 
 export function ChatPanel({ messages, isStreaming, suggestions, onSend, onClose }: ChatPanelProps) {
   const showGreeting = messages.length === 0;
+  const hasStartedConversation = messages.length > 0;
   const lastMessage = messages[messages.length - 1];
   const hasCompletedReply = !isStreaming && lastMessage?.role === "assistant" && lastMessage.content !== "";
 
@@ -34,14 +35,18 @@ export function ChatPanel({ messages, isStreaming, suggestions, onSend, onClose 
     <div
       className="fixed bottom-0 right-0 z-50 flex h-full w-full flex-col overflow-hidden border-t-2
         border-brand-gold bg-brand-paper shadow-2xl
-        widget:bottom-6 widget:right-6 widget:h-[min(600px,85vh)] widget:w-[380px] widget:rounded-xl widget:border-t-2"
+        widget:bottom-6 widget:right-6 widget:h-[min(640px,88vh)] widget:w-[380px] widget:rounded-xl widget:border-t-2"
     >
-      <Header onClose={onClose} />
+      <Header onClose={onClose} compact={hasStartedConversation} />
       {showGreeting && <Greeting />}
       <MessageList messages={messages} isStreaming={isStreaming} />
       {showQuickReplies && <QuickReplies replies={repliesToShow} onSelect={onSend} />}
       <ChatInput onSend={onSend} disabled={isStreaming} />
-      <Footer />
+      {/* The compliance line is already appended to every substantive financing reply (see
+          system-prompt.ts's Compliance footer instruction) -- once a conversation is under way,
+          this persistent footer is redundant chrome competing with the answer for space, so it
+          only shows on the idle/greeting screen. */}
+      {!hasStartedConversation && <Footer />}
     </div>
   );
 }
@@ -71,17 +76,32 @@ function HeaderPattern() {
   );
 }
 
-function Header({ onClose }: { onClose: () => void }) {
+interface HeaderProps {
+  onClose: () => void;
+  // Once the visitor is mid-conversation, the header is chrome competing with the answer for
+  // vertical space -- shrink it to a single compact row instead of the full two-line greeting
+  // state.
+  compact: boolean;
+}
+
+function Header({ onClose, compact }: HeaderProps) {
   return (
-    <div className="relative flex items-center justify-between overflow-hidden bg-brand px-4 py-3 text-white widget:rounded-t-[10px]">
+    <div
+      className={`relative flex items-center justify-between overflow-hidden bg-brand text-white
+        widget:rounded-t-[10px] ${compact ? "px-3 py-2" : "px-4 py-3"}`}
+    >
       <HeaderPattern />
       <div className="relative flex items-center gap-2.5">
-        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-gold/50 bg-white/10 text-sm font-semibold tracking-wide">
+        <span
+          className={`flex items-center justify-center rounded-full border border-brand-gold/50 bg-white/10
+            font-semibold tracking-wide transition-all
+            ${compact ? "h-7 w-7 text-xs" : "h-9 w-9 text-sm"}`}
+        >
           G
         </span>
         <div>
           <p className="text-sm font-semibold">Guidance Assistant</p>
-          <p className="text-xs text-white/70">Typically replies instantly</p>
+          {!compact && <p className="text-xs text-white/70">Typically replies instantly</p>}
         </div>
       </div>
       <button
