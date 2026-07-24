@@ -43,14 +43,21 @@ interface QuickRepliesProps {
 
 export function QuickReplies({ replies, onSelect }: QuickRepliesProps) {
   return (
-    <div className="flex flex-wrap gap-2 px-4 pb-3">
+    // A single scrollable row instead of wrapping -- keeps the chip strip to one line no matter
+    // how many/long the suggestions are, so it can't push the message area (the thing the
+    // visitor actually came to read) further down the panel. Scrollbar hidden cross-browser since
+    // the chips themselves signal there's more to scroll to.
+    <div
+      className="flex gap-2 overflow-x-auto px-4 pb-3 [-webkit-overflow-scrolling:touch]
+        [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
       {replies.map((reply) => (
         <button
           key={reply}
           type="button"
           onClick={() => onSelect(reply)}
-          className="rounded-full border border-brand/25 px-3 py-1.5 text-sm text-brand transition-colors
-            hover:border-brand-gold hover:bg-brand-gold/10"
+          className="shrink-0 whitespace-nowrap rounded-full border border-brand/25 px-3 py-1.5 text-sm text-brand
+            transition-colors hover:border-brand-gold hover:bg-brand-gold/10"
         >
           {reply}
         </button>
