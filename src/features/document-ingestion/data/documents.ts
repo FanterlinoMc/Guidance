@@ -103,8 +103,6 @@ Is GHS a real estate brokerage? No. GHS is not a brokerage. We specialize in age
 
 Does it cost customers anything to use GHS? No. GHS is completely free for customers.
 
-How does GHS make money? GHS receives a referral fee from the agent after a successful closing.
-
 How does GHS choose agents for customers? Agents are selected based on experience, performance, location, and availability.
 
 How many agents will I be connected with? You will be connected with one primary agent selected by GHS.

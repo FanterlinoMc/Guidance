@@ -30,6 +30,20 @@ export const RATE_QUOTE_PATTERN = new RegExp(
 );
 export const APPROVAL_GUARANTEE_PATTERN = /\b(guarantee(d)?|you will (qualify|be approved)|100%\s?approv\w*)\b/i;
 
+// Catches the model disclosing GHS's referral-fee arrangement with agents even when it isn't
+// grounded in retrieved context (i.e. stated from general real-estate-industry knowledge) --
+// the system prompt's own prohibition against this isn't reliable enough on its own, since this
+// is common industry knowledge the model can produce unprompted (see Adam's 2026-07-27 note:
+// referral-fee terms are fine to discuss with a verified agent, never with a customer). Exported
+// as three components rather than one combined regex -- output-filter.ts checks them per
+// sentence, since a single "fee ... agent" pattern with a bounded gap kept missing real phrasings
+// ("a fee from the real estate agent/broker") that put more words between the terms than a fixed
+// character budget could predict.
+export const REFERRAL_FEE_PHRASE_PATTERN = /\breferral fee\b/i;
+export const FEE_OR_COMMISSION_TERM_PATTERN = /\b(fee|commission)s?\b/i;
+export const AGENT_OR_BROKER_TERM_PATTERN = /\b(agent|broker|realtor)s?\b/i;
+export const COMPENSATION_VERB_PATTERN = /\b(receiv\w*|pay|pays|paid|compensat\w*)\b/i;
+
 // Must co-occur with a certainty/promise term, not just "close(s/d/ing) in N days" alone —
 // that bare phrasing also covers the prompt's explicitly permitted informational citation
 // ("most loans close in 45 days on average"). Originally missed the "-ing" form entirely
