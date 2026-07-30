@@ -101,21 +101,26 @@ editor / CLI once a project exists.
 itself.
 
 **Still needs building after a real Supabase project exists**:
-- **DB side**: every feature currently backed by an in-memory `Map` or JSONL file
-  (`lead-lifecycle/logic/lead-store.ts`, `agent-records/logic/agent-record-store.ts`,
-  `audit-log/logic/log-event.ts`, `stage-event-writer.ts`, and now
+- **DB side**: every feature currently backed by JSONL files (`lead-lifecycle/logic/lead-store.ts`,
+  `agent-records/logic/agent-record-store.ts`, `lead-extraction/logic/capture-lead-fields.ts`,
+  `audit-log/logic/log-event.ts`, `stage-event-writer.ts`, and
   `session-transcript/data/transcript-writer.ts`) needs its store implementation swapped for
   real queries against the schema above. Each was deliberately written with a narrow, swappable
   function signature for exactly this (e.g. `createLead`, `advanceLeadStage`, `logEvent`,
   `logSessionMessage`) — callers shouldn't need to change, only the store internals.
+  `lead-lifecycle` and `agent-records` started as in-memory `Map`s but were converted to
+  append-only JSONL once the dashboard (below) proved a `Map` isn't actually readable across
+  Next.js route boundaries — worth knowing if a future feature reaches for a `Map` as a "Step 7
+  stand-in" again: it silently doesn't work for anything reading from a different route.
 - **Auth side**: real session verification/middleware (`@supabase/supabase-js` or
   `@supabase/ssr`), wired the same way `call-claude.ts` gates on `getAnthropicApiKey()` — no
   code exists yet because building it untested against a project that doesn't exist would be
-  the same anti-pattern as Steps 11/12. The permission matrix (which of
-  `concierge`/`ae`/`rm`/`dm`/`admin` can do what) is a separate, still-open decision — it needs
-  Step 37's dashboard views to define real actions against, and role-to-permission boundaries
-  for a GLBA-flagged product are a business call, not just an engineering one. Decide that with
-  the user once Step 37 exists, not before.
+  the same anti-pattern as Steps 11/12. The internal dashboard (`/dashboard`, see the `dashboard`
+  feature) now exists with no access control — it has a visible "unauthenticated" banner instead
+  of a fake gate. The permission matrix (which of `concierge`/`ae`/`rm`/`dm`/`admin` can do what)
+  is a separate, still-open decision — it can now be defined against the dashboard's real views
+  and actions, but role-to-permission boundaries for a GLBA-flagged product are a business call,
+  not just an engineering one. Decide that with the user before wiring real auth in.
 
 ## Vercel (or other hosting)
 

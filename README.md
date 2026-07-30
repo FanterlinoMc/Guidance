@@ -44,6 +44,9 @@ See `.env.local.example` for the full list of environment variables and
   fallback UI copy and reply direction
 - **Audit & session logging** (`audit-log`, `session-transcript`) — PII-redacted transcript and
   audit trail, currently JSONL-file-backed pending a real database (see below)
+- **Internal dashboard** (`dashboard`) at `/dashboard` — leads funnel, agent/REA pipeline, and
+  audit activity feed for internal staff. No access control yet (see below); a visible banner
+  flags this in the UI itself
 
 ## Testing
 
