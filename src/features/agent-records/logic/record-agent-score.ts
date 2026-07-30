@@ -5,8 +5,8 @@ import type { AgentRecord } from "./types";
 const MIN_SCORE = 0;
 const MAX_SCORE = 10;
 
-export function recordAgentScore(agentRecordId: string, score: number): AgentRecord {
-  const record = getAgentRecord(agentRecordId);
+export async function recordAgentScore(agentRecordId: string, score: number): Promise<AgentRecord> {
+  const record = await getAgentRecord(agentRecordId);
   if (!record) {
     throw new AppError("INVALID_REQUEST", `No agent record found for id ${agentRecordId}.`, 404);
   }
@@ -15,6 +15,6 @@ export function recordAgentScore(agentRecordId: string, score: number): AgentRec
   }
 
   const updated: AgentRecord = { ...record, score, updatedAt: new Date().toISOString() };
-  saveAgentRecord(updated);
+  await saveAgentRecord(updated);
   return updated;
 }

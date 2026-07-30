@@ -10,7 +10,7 @@ export async function advanceLeadStage(
   toStage: LeadStage,
   detail?: Record<string, unknown>,
 ): Promise<Lead> {
-  const lead = getLead(leadId);
+  const lead = await getLead(leadId);
   if (!lead) {
     throw new AppError("INVALID_REQUEST", `No lead found for id ${leadId}.`, 404);
   }
@@ -24,7 +24,7 @@ export async function advanceLeadStage(
 
   const now = new Date().toISOString();
   const updatedLead: Lead = { ...lead, stage: toStage, updatedAt: now };
-  saveLead(updatedLead);
+  await saveLead(updatedLead);
 
   await appendStageEventLine({
     id: randomUUID(),

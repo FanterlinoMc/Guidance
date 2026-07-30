@@ -9,7 +9,7 @@ export interface CreateAgentRecordInput {
   isPartTime: boolean;
 }
 
-export function createAgentRecord(input: CreateAgentRecordInput): AgentRecord {
+export async function createAgentRecord(input: CreateAgentRecordInput): Promise<AgentRecord> {
   const now = new Date().toISOString();
   const record: AgentRecord = {
     id: randomUUID(),
@@ -19,6 +19,6 @@ export function createAgentRecord(input: CreateAgentRecordInput): AgentRecord {
     ...input,
   };
 
-  saveAgentRecord(record);
+  await saveAgentRecord(record);
   return record;
 }

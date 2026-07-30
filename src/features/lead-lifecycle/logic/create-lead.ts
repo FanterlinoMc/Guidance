@@ -14,7 +14,7 @@ export async function createLead(sessionId: string, track: LeadTrack): Promise<L
     updatedAt: now,
   };
 
-  saveLead(lead);
+  await saveLead(lead);
   await appendStageEventLine({ id: randomUUID(), leadId: lead.id, fromStage: null, toStage: "visitor", timestamp: now });
 
   return lead;
