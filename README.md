@@ -7,33 +7,12 @@ visitors separately from consumers, and hands off to a human Account Executive w
 
 Live demo: **https://guidance-tawny.vercel.app**
 
-## Tech Stack
+## Tech Stack: Guidance Home Service Site
 
-The chatbot embeds into the **Guidance Home Service Site**, so its target stack is the host
-site's stack — not the prototype's.
-
-**Host site (Guidance Home Service Site) — the integration target**
-
-- Backend: **PHP 7.3**, Laravel (older version)
-- Frontend: **jQuery 3.2**, JavaScript
-- Node: **v8** — build tooling only; not required for the frontend integration, the browser
-  handles it
-
-**Chatbot rewrite target**
-
-- **PHP 7.2 / 7.3 + jQuery / native JS**, so the widget drops into the host site with no
-  additional runtime
-
-**Current prototype (this repo, reference implementation)**
-
-- [Next.js 15](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS
-- [Anthropic Claude](https://docs.claude.com) (Sonnet 5) for chat replies, streamed over SSE
-- A TF-IDF lexical retrieval stub over a scraped/ingested corpus (stand-in for embeddings —
-  see `EXTERNAL_ACCOUNTS_SETUP.md`)
-- Feature-first architecture: each capability lives under `src/features/<name>/{data,logic,ui}`
-
-The sections below (Getting started, Testing, Deployment) describe the **current prototype**.
-They will be replaced as the PHP/jQuery rewrite lands.
+- Backend: PHP 7.3, Laravel (older version)
+- Frontend: jQuery 3.2, JavaScript
+- Node: v8 (not needed for frontend integration; browser handles it)
+- Chatbot rewrite will target PHP 7.2/7.3 + jQuery/native JS
 
 ## Getting started (current prototype)
 
