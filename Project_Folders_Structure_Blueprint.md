@@ -1,8 +1,12 @@
 # Project Folders Structure Blueprint — Guidance AI Chatbot
 
-Next.js 14 (App Router, TypeScript). Organized **feature-first** per `CLAUDE.md` — `app/` is thin
-routing glue only; all business logic lives in `src/features/*`; only genuinely cross-feature code
-lives in `src/core/`.
+**Target stack:** the chatbot is being rewritten to run on the Guidance Home Service Site's
+stack — **PHP 7.2/7.3 + jQuery 3.2 / native JS** (host site: PHP 7.3, Laravel; Node v8 for build
+tooling only). The tree below is the **current prototype** — Next.js 14 (App Router, TypeScript) —
+kept as the reference implementation until the rewrite lands.
+
+Organized **feature-first** per `CLAUDE.md` — `app/` is thin routing glue only; all business logic
+lives in `src/features/*`; only genuinely cross-feature code lives in `src/core/`.
 
 ## Tree
 

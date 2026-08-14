@@ -122,10 +122,14 @@ itself.
   and actions, but role-to-permission boundaries for a GLBA-flagged product are a business call,
   not just an engineering one. Decide that with the user before wiring real auth in.
 
-## Vercel (or other hosting)
+## Hosting
 
-**Status**: not blocking anything in this codebase today — there's no `vercel.json` or
-deploy-specific config because none has been needed. `next build` (verified this session)
-produces a standard Next.js production build that deploys to Vercel with zero extra config
-under default settings. Set `NEXT_PUBLIC_APP_URL` to the real deployed URL once known, and
-`ALLOWED_ORIGINS` if the widget will be embedded cross-origin from a different domain.
+**Target**: the chatbot rewrite (PHP 7.2/7.3 + jQuery/native JS) is meant to deploy onto the
+**Guidance Home Service Site**'s own PHP 7.3 / Laravel hosting, embedded alongside the existing
+jQuery 3.2 frontend — no separate hosting account needed once the rewrite lands.
+
+**Current prototype (Vercel or other hosting)**: not blocking anything in this codebase today —
+`next build` (verified this session) produces a standard Next.js production build that deploys
+to Vercel with zero extra config under default settings. Set `NEXT_PUBLIC_APP_URL` to the real
+deployed URL once known, and `ALLOWED_ORIGINS` if the widget will be embedded cross-origin from a
+different domain.

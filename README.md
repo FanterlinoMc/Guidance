@@ -7,7 +7,24 @@ visitors separately from consumers, and hands off to a human Account Executive w
 
 Live demo: **https://guidance-tawny.vercel.app**
 
-## Stack
+## Tech Stack
+
+The chatbot embeds into the **Guidance Home Service Site**, so its target stack is the host
+site's stack — not the prototype's.
+
+**Host site (Guidance Home Service Site) — the integration target**
+
+- Backend: **PHP 7.3**, Laravel (older version)
+- Frontend: **jQuery 3.2**, JavaScript
+- Node: **v8** — build tooling only; not required for the frontend integration, the browser
+  handles it
+
+**Chatbot rewrite target**
+
+- **PHP 7.2 / 7.3 + jQuery / native JS**, so the widget drops into the host site with no
+  additional runtime
+
+**Current prototype (this repo, reference implementation)**
 
 - [Next.js 15](https://nextjs.org) (App Router) + TypeScript + Tailwind CSS
 - [Anthropic Claude](https://docs.claude.com) (Sonnet 5) for chat replies, streamed over SSE
@@ -15,7 +32,10 @@ Live demo: **https://guidance-tawny.vercel.app**
   see `EXTERNAL_ACCOUNTS_SETUP.md`)
 - Feature-first architecture: each capability lives under `src/features/<name>/{data,logic,ui}`
 
-## Getting started
+The sections below (Getting started, Testing, Deployment) describe the **current prototype**.
+They will be replaced as the PHP/jQuery rewrite lands.
+
+## Getting started (current prototype)
 
 ```bash
 npm install
@@ -62,7 +82,7 @@ npm run test:rtl           # RTL/script-detection eval suite
 These evals hit a live `/api/chat` over HTTP (`EVAL_BASE_URL`, default `http://localhost:3100`),
 so run `npm run dev` (or point `EVAL_BASE_URL` at a deployed instance) before running them.
 
-## Deployment
+## Deployment (current prototype)
 
 Deployed on [Vercel](https://vercel.com), linked to this repo's `Mc` branch — every push
 auto-deploys. Required env vars on the Vercel project: `ANTHROPIC_API_KEY` at minimum (see
