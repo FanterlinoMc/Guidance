@@ -16,7 +16,10 @@ class Kernel extends HttpKernel
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
-        \Fruitcake\Cors\HandleCors::class,
+        // Fruitcake\Cors\HandleCors deliberately omitted: ChatController's own CorsResolver
+        // ports the original app's default-deny CORS behavior exactly (empty ALLOWED_ORIGINS =
+        // no header at all). Laravel's stock middleware defaults to a wildcard Access-Control-
+        // Allow-Origin, which is a real permissiveness regression against the frozen contract.
         \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
@@ -41,7 +44,10 @@ class Kernel extends HttpKernel
 
         'api' => [
             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-            'throttle:api',
+            // Stock throttle:api deliberately omitted: it returns Laravel's own "Too Many
+            // Attempts" body shape at a different limit (60/min) than RateLimiter's ported
+            // 30/hour-per-IP + global-cap contract, which is what the frozen wire contract and
+            // the eval suite actually assert against.
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
