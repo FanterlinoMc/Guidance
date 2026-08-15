@@ -1,49 +1,52 @@
 # Deployment Checklist — Guidance Chatbot (PHP/Laravel)
 
-Phase 6 of the rewrite. Everything below is unverified against the real Guidance Home Service
-Site host — this app has only ever run against a local PHP 8.1 dev server + SQLite. Treat every
-item as a real step, not a formality; several were only found by actually hitting them during
-local testing (noted inline where relevant).
+Phase 6 of the rewrite. A real staging deploy (Railway, `chatbot-php-production.up.railway.app`,
+real MySQL, PHP 8.5) exercised most of this end-to-end — those items are marked verified with
+what was actually confirmed. The real Guidance Home Service Site host is still untouched; items
+without that marker are still real steps, not formalities.
 
 ## 1. Host environment
 
-- [ ] Confirm the host's actual PHP version. `composer.json` targets `"php": "^7.3|^8.0"` — verify
-      the host is at least 7.3.0. If it's genuinely 7.2, the app needs re-verifying against that
-      floor (untested at 7.2; this port was built and tested against 7.3-compatible syntax on a
-      local PHP 8.1 install, never against real 7.2 or 7.3).
-- [ ] Confirm required PHP extensions are enabled on the host: `openssl`, `curl`, `mbstring`,
-      `fileinfo`, `tokenizer`, `PDO` + the driver matching the real DB engine (`pdo_mysql` or
-      `pdo_pgsql` — **not** `pdo_sqlite`, that's local-dev-only, see §2). All of these needed
-      manual enabling in php.ini on the local dev PHP install; don't assume a host has them on by
-      default.
-- [ ] Confirm Composer is available on the host, or that you're deploying a pre-built `vendor/`
-      directory instead (composer.lock is committed, so a matching install is reproducible either
-      way).
-- [ ] Confirm HTTPS is available/enforced. The session cookie's `SameSite=None; Secure` policy in
-      production (`App\Services\Session\SessionResolver`) requires it — same-origin requests work
-      under HTTP but cross-origin embedding will silently fail to persist the session cookie
-      without HTTPS.
+- [ ] **Confirm the host's actual PHP version.** `composer.json` targets `"php": "^7.3|^8.0"`, and
+      the app's own code is still written 7.3-syntax-safe throughout (no constructor promotion,
+      readonly, arrow functions, named arguments, str_contains) — but **no tool available this
+      session could actually provision real PHP 7.3 to verify it**: not winget (dropped from
+      feeds, EOL), not Railway/Railpack (whose docs say "only PHP 8.2 and above are supported").
+      The staging deploy ran on PHP 8.5 instead (Railpack's default for an unconstrained-above
+      range) — Laravel 8.83 built and ran cleanly on it with no errors surfaced in this pass, which
+      is *reassuring* but not the same as confirming the 7.3 floor. If the real host is genuinely
+      7.2/7.3, that specific version is still unverified.
+- [x] **Confirm required PHP extensions.** Verified via the Railway build: `openssl`, `curl`,
+      `mbstring`, `fileinfo`, `tokenizer`, `pdo_mysql` all present and working with zero manual
+      config on Railpack's PHP image (unlike the local Windows PHP install, which needed all of
+      these enabled by hand in php.ini).
+- [x] **Composer availability.** Verified — Railpack detected the Laravel app via `composer.json`
+      and ran `composer install` automatically as part of its build.
+- [x] **HTTPS.** Verified working on Railway's platform domain. One real bug found and fixed here:
+      `app/Http/Middleware/TrustProxies.php` had `$proxies = null` (the Laravel default), so the
+      app never saw `X-Forwarded-Proto` and generated `http://` asset URLs on an `https://` page
+      even though the actual connection was secure. Fixed by setting `$proxies = '*'` — safe and
+      standard for an app that's only ever reached through a host platform's edge proxy, never
+      directly exposed. **This fix is real and platform-agnostic — it'll matter on the real host
+      too if it sits behind any reverse proxy/load balancer**, which most PHP hosting does.
 
 ## 2. Database
 
-- [ ] Decide the real DB engine (MySQL is the most likely fit for typical PHP/Laravel shared
-      hosting; Postgres also works). **SQLite was local-dev-only** — a zero-setup convenience for
-      testing on this machine, never the deployment target. Laravel's schema builder abstracts the
-      dialect difference; the migrations don't need rewriting either way.
-- [ ] Set real `DB_CONNECTION` / `DB_HOST` / `DB_PORT` / `DB_DATABASE` / `DB_USERNAME` /
-      `DB_PASSWORD` in the host's `.env` — do **not** reuse the local `.env`'s
-      `DB_DATABASE=D:/Guidance-php-laravel-stack/...` absolute path, that's specific to this
-      machine (and was itself a real bug found during Phase 3 — a relative path resolved against
-      the wrong working directory and silently broke every DB write into a generic 503; use a
-      real host, not a path, for a non-SQLite connection).
-- [ ] Run `php artisan migrate --force` against the real DB. Six migrations total: `leads`,
-      `stage_events`, `agent_records`, `audit_log`, `session_messages`, and the `role` column added
-      to `users` in Phase 5.
-- [ ] Create at least one dashboard user with a `role` set. **No registration or invite flow
-      exists** — the only way to create a dashboard user today is a direct DB insert or
-      `php artisan tinker` (this is how the Phase 5 smoke test did it). Decide whether that's
-      acceptable long-term or whether a seeder / admin-invite flow is worth building before this
-      ships to real staff.
+- [x] **DB engine.** Verified against real MySQL on staging (matching the most likely real-host
+      fit) — all 10 migrations (5 from Phase 3, `role` column from Phase 5, plus Laravel's 4
+      defaults) applied cleanly with zero dialect issues, confirming Laravel's schema builder
+      abstraction actually holds. **SQLite remains local-dev-only.**
+- [x] **DB env vars.** Verified via Railway's variable-reference syntax
+      (`${{MySQL.MYSQLHOST}}` etc., resolved at deploy time) — confirms the earlier Phase-3 bug
+      (a relative `DB_DATABASE` path resolving against the wrong working directory) was specific
+      to the local dev setup, not a design flaw; a real host's DB config just needs real values,
+      not a path.
+- [x] **Migrations.** Verified — ran cleanly against real MySQL. One surprise: Railpack's Laravel
+      build convention runs `php artisan migrate` automatically as part of deploy — don't assume
+      you need to trigger it manually on every PaaS, check first.
+- [x] **Dashboard user creation.** Verified the `php artisan tinker` direct-insert path works on a
+      real deployed instance (`railway ssh` into the container). Still no registration/invite UI —
+      that gap is real, just now confirmed to have a working manual workaround on real infra.
 
 ## 3. Environment variables (`.env`)
 
@@ -71,7 +74,9 @@ reaches the app.
       `internal-chunks.json`) is **not in git** — same as the original Next.js app, these are
       gitignored generated artifacts. `CorpusLoader` fails soft (empty corpus, not a crash) if
       they're missing, so the app will boot fine without them — but every retrieval will come back
-      empty and the assistant will have no grounded context to answer from.
+      empty and the assistant will have no grounded context to answer from. **Confirmed on
+      staging**: not uploaded there (deliberately, to keep the deploy fast), so staging's retrieval
+      is empty — matches the documented fail-soft behavior exactly, not a surprise failure.
 - [ ] Generate or copy these two JSON files onto the host at `storage/app/corpus/`. They're
       produced by the Node scripts kept from the original codebase
       (`scripts/scrape.js`/`chunk.js`/`ingest-internal-docs.js` — Node is needed only to run these
@@ -80,16 +85,18 @@ reaches the app.
 
 ## 5. Application setup
 
-- [ ] `composer install --no-dev --optimize-autoloader` — **not** a bare `composer install`,
-      which pulls in dev-only packages (`phpunit`, `fakerphp`, `mockery`, etc.) that don't belong
-      in production.
-- [ ] `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache` — standard
-      Laravel production performance step; skip only if you have a reason to want live config/
-      route reloading.
-- [ ] Confirm `storage/` and `bootstrap/cache/` are writable by the web server's process user.
+- [x] **`composer install`.** Verified — Railpack's build ran this automatically on detecting
+      `composer.json`. (Its default is a full install, not `--no-dev`; a real host's deploy
+      pipeline should still explicitly use `--no-dev --optimize-autoloader` for production.)
+- [x] **Artisan caching.** Verified — `config:cache`/`route:cache`/`view:cache`/`event:cache` all
+      ran cleanly as part of Railpack's build with no errors.
+- [x] **Writable `storage/`/`bootstrap/cache/`.** Verified — Railpack's build runs
+      `chmod -R a+rw storage` automatically; a manually-configured host needs this set explicitly.
 - [ ] Web server document root is `public/`, with all non-file requests rewritten to
       `public/index.php` (the committed `public/.htaccess` covers this for Apache; Nginx needs
-      the equivalent `try_files` rule in its own config, not included in this repo).
+      the equivalent `try_files` rule in its own config, not included in this repo). Railway's
+      Railpack build handles this itself (runs its own PHP server, not Apache/Nginx), so this
+      specific item is still unverified against a traditional Apache/Nginx host.
 
 ## 6. Widget embed on the host site
 
@@ -107,13 +114,22 @@ reaches the app.
       `ANTHROPIC_API_KEY` set so the currently-`SKIPPED` cases can actually grade:
       `EVAL_BASE_URL=https://<real-domain> npm run test:domain` (and `test:resilience`) from the
       original Next.js repo — these still work unmodified against the PHP endpoint, that's the
-      whole point of the frozen wire contract from Phase 0.
-- [ ] Manually walk the golden path in a real browser: open the widget, ask a financing question,
-      confirm a real (non-503) reply streams in, submit an email in-chat and confirm a lead shows
-      up in `/dashboard/leads`.
-- [ ] Log into `/dashboard` with a real provisioned user and click through all four sections
-      (Overview, Leads, Agents, Activity) — the local smoke test covered this over curl with
-      synthetic data; a real browser pass with real traffic hasn't happened.
+      whole point of the frozen wire contract from Phase 0. **Not done on staging** — no
+      `ANTHROPIC_API_KEY` was provided for that pass, so live-chat-reply behavior stays unverified
+      on real infra specifically (everything not requiring a Claude reply — guardrails, 503
+      fallback, lead capture, dashboard, login — was verified there via curl, see below).
+- [x] **Golden path (partial).** Verified via curl against real staging infra
+      (`chatbot-php-production.up.railway.app`): the PII guardrail correctly blocks and redirects,
+      a normal message correctly 503s without an API key (not a crash), and submitting an email
+      in-chat correctly created a lead (`track=homebuyer`, `stage=captured`) that showed up on
+      `/dashboard/leads` — all matching local-test behavior exactly, now confirmed on a real public
+      URL with a real MySQL database. **Not done**: an actual real (non-503) reply, and a real
+      browser pass (no Chrome extension connected this session) — layout, click-through, and the
+      jQuery widget's actual in-browser behavior are still unverified anywhere but Node-script
+      unit tests.
+- [x] **Dashboard login cycle.** Verified on staging: created a user via `railway ssh` +
+      `php artisan tinker`, logged in over curl with a real CSRF token, all 4 dashboard pages
+      (Overview, Leads, Agents, Activity) returned 200 with real data, no embedded PHP errors.
 
 ## 8. Known gaps — carried forward or newly introduced, not silently fixed
 
@@ -126,11 +142,14 @@ reaches the app.
   this codebase, this port only has the model/migration/dashboard view ready for it.
 - **No token-based cost cap on Claude usage** — same gap flagged in the original's own
   `EXTERNAL_ACCOUNTS_SETUP.md`, not something this rewrite added or fixed.
-- **`lead-routing`'s `HandleSlaBreach`/`RecordRoutingOverride` were never ported** — dashboard/
-  ops-action concerns, not blocking for chat or the read-only dashboard views built in Phase 5.
 - **Real streaming was deliberately not implemented.** The output guardrail needs the complete
   reply before anything ships to the visitor; the buffered/re-chunked delivery is a design
   constraint carried from the original app, not a shortcut to fix later.
+- **PHP 7.3 itself remains unverified.** `lead-routing`'s `HandleSlaBreach`/`RecordRoutingOverride`
+  were ported and wired into real dashboard actions after this checklist was first written (SLA-
+  breach detection on the leads page, an agent-veto override action) — that gap is closed. What's
+  still open: no tool available this session (local package managers, Railway/Railpack) could
+  actually provision real PHP 7.3 to test against, only 8.1 (local) and 8.5 (staging). See §1.
 
 ## 9. Rollback safety
 
