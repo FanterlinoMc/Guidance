@@ -16,6 +16,11 @@ final class SessionMessage extends Model
 
     protected $fillable = ['session_id', 'role', 'content'];
 
+    // $timestamps = false means Eloquent won't auto-cast created_at to Carbon on its own --
+    // without this it comes back from the DB as a plain string (found via AuditLog's identical
+    // issue on the dashboard activity feed).
+    protected $casts = ['created_at' => 'datetime'];
+
     protected static function booted()
     {
         static::creating(function (self $message) {

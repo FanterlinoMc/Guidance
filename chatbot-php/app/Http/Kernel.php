@@ -64,6 +64,9 @@ class Kernel extends HttpKernel
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
         'can' => \Illuminate\Auth\Middleware\Authorize::class,
+        // Phase 5: gates the internal dashboard -- "authenticated AND has any dashboard role",
+        // see EnsureDashboardRole's own comment for why there's no per-role permission matrix.
+        'dashboard.role' => \App\Http\Middleware\EnsureDashboardRole::class,
         'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
         'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,

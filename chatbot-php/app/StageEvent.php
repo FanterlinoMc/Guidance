@@ -16,7 +16,10 @@ final class StageEvent extends Model
 
     protected $fillable = ['lead_id', 'from_stage', 'to_stage', 'detail'];
 
-    protected $casts = ['detail' => 'array'];
+    // $timestamps = false means Eloquent won't auto-cast created_at to Carbon on its own --
+    // without this it comes back from the DB as a plain string (found via AuditLog's identical
+    // issue on the dashboard activity feed).
+    protected $casts = ['detail' => 'array', 'created_at' => 'datetime'];
 
     protected static function booted()
     {

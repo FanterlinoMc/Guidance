@@ -18,7 +18,10 @@ final class AuditLog extends Model
 
     protected $fillable = ['session_id', 'reason_code', 'detail'];
 
-    protected $casts = ['detail' => 'array'];
+    // $timestamps = false means Eloquent won't auto-cast created_at to Carbon on its own --
+    // without this it comes back from the DB as a plain string and breaks any caller doing
+    // ->diffForHumans() etc. (found via the dashboard activity feed).
+    protected $casts = ['detail' => 'array', 'created_at' => 'datetime'];
 
     protected static function booted()
     {
