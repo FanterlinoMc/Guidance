@@ -5,6 +5,10 @@
 @section('content')
     <h1 class="gh-dash-page-title">Agent Applications</h1>
 
+    @if (session('status'))
+        <p class="gh-dash-badge gh-dash-badge--success" style="margin-bottom: 12px;">{{ session('status') }}</p>
+    @endif
+
     @if (count($agents) === 0)
         <p class="gh-dash-empty">No agent applications yet — REA signups will appear here.</p>
     @else
@@ -18,6 +22,7 @@
                         <th>Score</th>
                         <th>Status</th>
                         <th>Updated</th>
+                        <th>Override</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,6 +48,17 @@
                                 <span class="gh-dash-badge gh-dash-badge--{{ $tone }}">{{ $agent->status }}</span>
                             </td>
                             <td class="gh-dash-muted">{{ $agent->updated_at }}</td>
+                            <td>
+                                @if ($row['needsVeto'])
+                                    <form method="POST" action="{{ route('dashboard.agents.override', $agent->id) }}" class="gh-dash-override-form">
+                                        @csrf
+                                        <input type="text" name="reason" placeholder="Override reason" required maxlength="1000">
+                                        <button type="submit">Override</button>
+                                    </form>
+                                @else
+                                    <span class="gh-dash-muted">—</span>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>

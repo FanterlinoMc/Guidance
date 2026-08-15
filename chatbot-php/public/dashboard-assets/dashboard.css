@@ -351,3 +351,32 @@ body {
   margin: 4px 0 0;
   font-size: 14px;
 }
+
+/* Agent routing-override form (agents/index) */
+
+.gh-dash-override-form {
+  display: flex;
+  gap: 6px;
+}
+
+.gh-dash-override-form input[type="text"] {
+  width: 140px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.gh-dash-override-form button {
+  border: none;
+  border-radius: 6px;
+  background: #0b2545;
+  color: #fff;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.gh-dash-override-form button:hover {
+  opacity: 0.9;
+}

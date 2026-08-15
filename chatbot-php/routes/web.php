@@ -31,5 +31,6 @@ Route::middleware(['auth', 'dashboard.role'])->prefix('dashboard')->name('dashbo
     Route::get('/leads', [LeadsController::class, 'index'])->name('leads.index');
     Route::get('/leads/{id}', [LeadsController::class, 'show'])->name('leads.show');
     Route::get('/agents', [AgentsController::class, 'index'])->name('agents.index');
+    Route::post('/agents/{id}/override', [AgentsController::class, 'override'])->name('agents.override');
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
 });
