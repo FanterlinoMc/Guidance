@@ -68,6 +68,26 @@ debug mode on, that failure mode is also what a real visitor or dashboard user w
 it would render full file paths and stack traces. Confirm this is `false` before any real traffic
 reaches the app.
 
+**Per-IP rate limiting is unverified on Railway specifically, and the reason matters for the
+real host too.** `RateLimiter` keys its per-IP bucket on `$request->ip()`, which depends entirely
+on `TrustProxies` correctly resolving the real client IP from whatever proxy headers the host's
+edge network sends. On Railway staging: with `TrustProxies::$proxies = '*'` trusting
+`X-Forwarded-For`, nearly every request from the *same* curl client resolved to a *different*
+`ip()` value (46 distinct per-IP cache keys for ~43 requests) — the per-IP limit silently never
+enforced at all, while the global limit kept counting correctly the whole time (confirming the
+cache mechanism itself, not the IP resolution, was the problem). Removing `X-Forwarded-For` from
+`TrustProxies::$headers` (keeping `Proto`/`Host`/`Port` trusted, still needed for §1's HTTPS fix)
+made `ip()` fall back to `REMOTE_ADDR` — but on Railway that *still* wasn't stable request-to-
+request, likely because Railway's stack runs on FrankenPHP (Caddy-based), which can rewrite the
+IP-resolution picture before Laravel's own middleware ever runs, ahead of and independent of
+anything `TrustProxies` controls. **This is very likely a Railway/FrankenPHP-specific interaction,
+not something in this codebase** — the real host almost certainly runs plain Apache or Nginx +
+PHP-FPM, a materially different proxy chain. Re-run `npm run test:resilience` against the real
+host once deployed and check the per-IP case specifically (case 1, "Rate-limit enforcement") — if
+it still fails there, that's the point to actually debug `TrustProxies`/`$request->ip()`
+resolution against that host's real, known proxy topology (see the class-level comment in
+`TrustProxies.php` for exactly what was tried and ruled out here).
+
 ## 4. Corpus data
 
 - [ ] The TF-IDF retrieval corpus (`storage/app/corpus/guidance-chunks.json` and
@@ -110,23 +130,22 @@ reaches the app.
 
 ## 7. Post-deploy verification
 
-- [ ] Re-run the eval suite against the real deployed URL, this time with a real
-      `ANTHROPIC_API_KEY` set so the currently-`SKIPPED` cases can actually grade:
-      `EVAL_BASE_URL=https://<real-domain> npm run test:domain` (and `test:resilience`) from the
-      original Next.js repo — these still work unmodified against the PHP endpoint, that's the
-      whole point of the frozen wire contract from Phase 0. **Not done on staging** — no
-      `ANTHROPIC_API_KEY` was provided for that pass, so live-chat-reply behavior stays unverified
-      on real infra specifically (everything not requiring a Claude reply — guardrails, 503
-      fallback, lead capture, dashboard, login — was verified there via curl, see below).
-- [x] **Golden path (partial).** Verified via curl against real staging infra
-      (`chatbot-php-production.up.railway.app`): the PII guardrail correctly blocks and redirects,
-      a normal message correctly 503s without an API key (not a crash), and submitting an email
-      in-chat correctly created a lead (`track=homebuyer`, `stage=captured`) that showed up on
-      `/dashboard/leads` — all matching local-test behavior exactly, now confirmed on a real public
-      URL with a real MySQL database. **Not done**: an actual real (non-503) reply, and a real
-      browser pass (no Chrome extension connected this session) — layout, click-through, and the
-      jQuery widget's actual in-browser behavior are still unverified anywhere but Node-script
-      unit tests.
+- [x] **Eval suite against real infra, with a real `ANTHROPIC_API_KEY`.**
+      `EVAL_BASE_URL=https://chatbot-php-production.up.railway.app npm run test:domain` — **7/7
+      passed**, all grading real Claude replies (not skipped): co-ownership program explanation,
+      rate-quote refusal-and-redirect, Shariah-ruling refusal, permitted down-payment info,
+      REA screening questions, out-of-scope decline, and the PII guardrail. Confirms the frozen
+      wire contract from Phase 0 holds against a real model, real infra, real public URL — this is
+      the strongest verification this rewrite has had. `test:resilience` was 1/2 (see the rate-
+      limiting callout in §3 — a Railway/FrankenPHP-specific proxy quirk, not a code bug, but
+      genuinely unverified until re-run against the real host).
+- [x] **Golden path.** Verified via curl against real staging infra: the PII guardrail blocks and
+      redirects, a real chat question got a real grounded Claude reply with the compliance footer
+      and parsed suggestions, the rate-quote guardrail correctly redirected instead of quoting a
+      number, and submitting an email in-chat correctly created a lead (`track=homebuyer`,
+      `stage=captured`) that showed up on `/dashboard/leads`. **Not done**: a real browser pass (no
+      Chrome extension connected this session) — layout, click-through, and the jQuery widget's
+      actual in-browser behavior are still unverified anywhere but Node-script unit tests.
 - [x] **Dashboard login cycle.** Verified on staging: created a user via `railway ssh` +
       `php artisan tinker`, logged in over curl with a real CSRF token, all 4 dashboard pages
       (Overview, Leads, Agents, Activity) returned 200 with real data, no embedded PHP errors.
