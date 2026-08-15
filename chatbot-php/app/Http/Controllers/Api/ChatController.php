@@ -11,6 +11,7 @@ use App\Services\Chat\SseStreamBuilder;
 use App\Services\Chat\SuggestionExtractor;
 use App\Services\Cors\CorsResolver;
 use App\Services\Guardrails\GuardrailGateway;
+use App\Services\Leads\CaptureLeadFromChatTurn;
 use App\Services\RateLimit\RateLimiter;
 use App\Services\Retrieval\RetrieveContextForSession;
 use App\Services\Session\SessionResolver;
@@ -42,6 +43,9 @@ final class ChatController extends Controller
     /** @var GuardrailGateway */
     private $guardrails;
 
+    /** @var CaptureLeadFromChatTurn */
+    private $captureLead;
+
     /** @var RetrieveContextForSession */
     private $retrieveContext;
 
@@ -70,6 +74,7 @@ final class ChatController extends Controller
         ChatRequestParser $requestParser,
         TranscriptLogger $transcriptLogger,
         GuardrailGateway $guardrails,
+        CaptureLeadFromChatTurn $captureLead,
         RetrieveContextForSession $retrieveContext,
         SystemPromptBuilder $systemPrompt,
         ConversationHistoryCapper $historyCapper,
@@ -84,6 +89,7 @@ final class ChatController extends Controller
         $this->requestParser = $requestParser;
         $this->transcriptLogger = $transcriptLogger;
         $this->guardrails = $guardrails;
+        $this->captureLead = $captureLead;
         $this->retrieveContext = $retrieveContext;
         $this->systemPrompt = $systemPrompt;
         $this->historyCapper = $historyCapper;
@@ -116,6 +122,10 @@ final class ChatController extends Controller
             if (! $inputResult->allowed) {
                 return $this->sseResponse($sessionId, $inputResult->refusalMessage ?? self::DEFAULT_REFUSAL, [], $corsHeaders, $session['cookie']);
             }
+
+            // Only a message that passed the input guardrail counts as real engagement -- see
+            // CaptureLeadFromChatTurn's own comment for the track=homebuyer default it applies.
+            $this->captureLead->handle($sessionId, $latestUserMessage);
 
             $retrievedChunks = $this->retrieveContext->retrieve($sessionId, $latestUserMessage);
             $systemMessage = $this->systemPrompt->build($retrievedChunks);
